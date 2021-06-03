@@ -4,8 +4,8 @@ Code for reproducing the results presented in the paper 'Predify:Augmenting deep
 
 Dependencies :
 
-predify
-torch
-tensorboard
-loguru
+- predify
+- torch
+- tensorboard
+- loguru
 
