@@ -7,5 +7,6 @@ Dependencies :
 - predify
 - torch
 - tensorboard
+- foolbox
 - loguru
 
