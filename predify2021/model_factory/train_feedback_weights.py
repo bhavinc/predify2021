@@ -19,9 +19,7 @@ import time
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-import timm
-from timm.models import efficientnet_b0
-from peff_b0 import PEff_b0SeparateHP_V1
+from .get_model import get_model
 
 
 
@@ -42,7 +40,7 @@ class Args():
         self.task_name =  'pefficientnet_b0_lr0.001RMProp_with_cosingannealing'       #dir_name
         self.extra_stuff_you_want_to_add_to_tb = 'same_cosine_annealing_with_t0_3'
 
-        self.imagenet_dir = '/home/milad/pcproject/imagenet'
+        self.imagenet_dir = '/path/to/imagenet/'
         self.optim_name = 'RMSProp'
         self.lr = 0.001
         self.weight_decay = 5e-4
@@ -50,7 +48,7 @@ class Args():
 
         # optional
         self.resume = None                         #resuming the training 
-        self.resume_ckpts= [f"/home/bhavin/Projects/predify/pefficient_net/pefficientnet_b0/pnet_pretrained_pc{x+1}_001.pth" for x in range(8)]                     #path to the checkpoints. Should be a list of len equal to NUMBER_OF_PCODERS
+        self.resume_ckpts= None                    #path to the checkpoints. Should be a list of len equal to NUMBER_OF_PCODERS
 
 
 args = Args()
@@ -72,9 +70,9 @@ if not os.path.exists(args.task_name):
 ################################################
 #          Net , optimizers
 ################################################
-net = efficientnet_b0(pretrained=True)
-pnet = PEff_b0SeparateHP_V1(net,build_graph=True,random_init=False)
-pnet.cuda()
+
+pnet = get_model('peffb0',deep_graph=False)
+pnet.to(device)
 
 NUMBER_OF_PCODERS = pnet.number_of_pcoders
 
