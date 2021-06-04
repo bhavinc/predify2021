@@ -85,6 +85,10 @@ plt.savefig(f'mce.pdf',bbox_inches='tight')
 
 
 
+
+########################################
+##   Analyse the CE scores
+########################################
 def get_bootstrap_estimates(data,number_of_samples_to_draw,num_bootstraps=1000,operation='mean'):
 
     import scipy
@@ -173,4 +177,4 @@ def plot2(fname):
     plt.tight_layout()
     plt.savefig(f'{tag}_cescores.png')
 
-# plot2(fname)
+plot2(fname)
