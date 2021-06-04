@@ -1,3 +1,7 @@
+###########################################
+# Get the adversarial attacks 
+# using the imagelists.
+###########################################
 #%%
 import sys
 
@@ -22,15 +26,15 @@ import foolbox as fb
 
 
 
+gpu_to_use      = str(sys.argv[1])
+TIMESTEP        = int(sys.argv[2])
+model_name      = str(sys.argv[3])
+imagelist_fname = str(sys.argv[4])
 
 
-model_name = sys.argv[3]
 rseed = 17
-gpu_to_use = sys.argv[1]
 batchsize = 4
-imagelist_fname = f'./{model_name}_0.8ff_0.1fb_0.01erm_1000images_rseed420'
-TIMESTEP = int(sys.argv[2])
-ckpt_freq = None
+ckpt_freq = None     #if your attacks take too long and you would like to checkpoint them 
 
 
 
@@ -46,6 +50,7 @@ save_dir = 'attacks_tmp/'
 save_file = f"{model_name}_timestep{TIMESTEP}_LinfBIM{num_steps}steps_{model_name}_0.8ff_0.1fb_0.01erm_rseed{rseed}_1000images.p"
 
 
+# setup devices and seeds
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_to_use)
 device = torch.device('cuda:0')
@@ -57,7 +62,7 @@ np.random.seed(rseed)
 
 
 
-def get_dist(A,B):
+def get_dist(A,B,p_val=float('inf')):
 
     n,h,w,c = A.shape
     A = A.reshape(n,h*w*c)
@@ -65,11 +70,11 @@ def get_dist(A,B):
     n,h,w,c = B.shape
     B = B.reshape(n,h*w*c)
 
-    return (A - B).norm(p=float('inf'),dim=1)
+    return (A - B).norm(p=p_val,dim=1)
 
 
 
-
+# setup the dataloaders for the imagelist
 class CustomDataSet(torch.utils.data.Dataset):
 
     def __init__(self, maindir, transform=None):
@@ -84,8 +89,6 @@ class CustomDataSet(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.all_imgs)
 
-
-
 val_ds = CustomDataSet(imagelist_fname)
 val_loader = torch.utils.data.DataLoader(val_ds,batch_size=batchsize,shuffle=False,drop_last=False)
 
@@ -94,7 +97,7 @@ val_loader = torch.utils.data.DataLoader(val_ds,batch_size=batchsize,shuffle=Fal
 ##                      Network    
 ###########################################################
 
-from ..model_factory import get_model,set_hyperparams
+from ..model_factory import get_model,set_hyperparams 
 
 if model_name == 'pvgg':
     hps = [
@@ -117,6 +120,7 @@ if model_name == 'peffb0':
 
     ]
 
+# Make sure that deep_graph=True here. Otherwise, torch will not create the deeper graphs
 model = get_model(model_name,pretrained=True,deep_graph=True,timesteps=TIMESTEP,hyperparams=hps)
 
 
@@ -134,7 +138,7 @@ fmodel = fb.PyTorchModel(model,bounds=(0,1),preprocessing=preprocessing)
 
 perturbations = []  # perturbations[batch][epsilon][img_in_a_batch]
 clipped_images = [] # clipped_images[batch][epsilon][whole adv batch (i.e. in NCHW format)]
-successes = []      #successes[batch][epsilon][img_in_a_batch]
+successes = []      # successes[batch][epsilon][img_in_a_batch]
 
 tstart = datetime.now()
 for ind,(images,labels) in enumerate(tqdm(val_loader,ncols=50)):
@@ -150,11 +154,9 @@ for ind,(images,labels) in enumerate(tqdm(val_loader,ncols=50)):
         criterion = fb.criteria.Misclassification(labels.to(device))
     
     raw_advs,clipped_advs,success = attack(fmodel,images.to(device),criterion=criterion,epsilons=epsilons)
-
-
+    
     clipped_images.append(clipped_advs)
-    # perturbs_for_this_batch = [(clipped_advs[eps].cuda() - images.cuda()).norm(dim=(1,2,3)) for eps in range(len(epsilons))]  # TODO: Change this if you are planning to change the attack
-    perturbs_for_this_batch = [get_dist(clipped_advs[eps].to(device),images.to(device)) for eps in range(len(epsilons))]  # TODO: Change this if you are planning to change the attack
+    perturbs_for_this_batch = [get_dist(clipped_advs[eps].to(device),images.to(device)) for eps in range(len(epsilons))]
     perturbations.append(perturbs_for_this_batch)
     successes.append(success)
 
@@ -163,16 +165,17 @@ for ind,(images,labels) in enumerate(tqdm(val_loader,ncols=50)):
         tend = datetime.now()
         print (f"Checkpointing at index {ind}...")
         data_dict = {
-                        'model':f"{model_name}_at_timestep{TIMESTEP}",
-                        'number_of_images':1000,
-                        'foolbox_version':fb.__version__,
-                        'attack':attack,
-                        'perturbations':perturbations,
-                        'clipped_advs': clipped_images,
-                        'successes':successes,
-                        'targeted':is_attack_targeted,
-                        'random_seed':rseed,
-                        'epsilons':epsilons,
+                        'model'           : f"{model_name}_at_timestep{TIMESTEP}",
+                        'number_of_images': len(val_ds),
+                        'foolbox_version' : fb.__version__,
+                        'attack'          : attack,
+                        'perturbations'   : perturbations,
+                        'clipped_advs'    : clipped_images,
+                        'successes'       : successes,
+                        'targeted'        : str(is_attack_targeted),
+                        'random_seed'     : rseed,
+                        'epsilons'        : epsilons,
+                        'imagelist_used'  : imagelist_fname
                     }
 
         with open(os.path.join(save_dir,f"ckpt_ind{ind}_{save_file}"),'wb') as f:
@@ -185,7 +188,7 @@ print ('\nTime taken : ',tend-tstart)
 
 
 
-## Final save ##
+# final save
 data_dict = {
     'model'           : f"{model_name}_at_timestep{TIMESTEP}",
     'number_of_images': len(val_ds),
@@ -204,54 +207,5 @@ with open(os.path.join(save_dir,save_file),'wb') as f:
     pickle.dump(data_dict,f)
 
 print ('Done.')
-
-#%%
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# corrects = [0.,0.,0.,0.]
-# for ind,net in enumerate(model_list):
-#     for i,(inputs,labels) in enumerate(val_loader,0):
-#         net.reset()
-#         inputs = inputs.to(device) + torch.normal(0, 0.5, size=inputs.shape,generator=torch.manual_seed(0)).to(device)
-#         preds = net(inputs)            
-#         outputs = preds.max(-1)[1]
-#         corrects[ind] += torch.sum(outputs==labels.to(device)).cpu().clone()
-       
-#     print (x,'=====>',corrects[ind]/100.)
-
-# print ()
-# print ()
-# print ('--'*20)
-# print ('The accuracies are as follows : ')
-# print ('--'*20)
-# for i,t in enumerate([1,6,10]):
-#     print (t,'------',corrects[i]/100.)
 
 #%%
