@@ -32,7 +32,7 @@ def get_model(name,pretrained=False,deep_graph=False,timesteps=4,hyperparams=Non
 
 
         if pretrained == True:
-            backward_weight_dir = '/home/milad/mhd3/predictive_coding/pretrained/pvgg16_imagenet/'
+            backward_weight_dir = './'
             print (f'Loading weights from {backward_weight_dir}')
             for n in range(pvgg16.number_of_pcoders):
                 checkpoint = torch.load(opj(backward_weight_dir, f'pvgg16_imagenet_pretrained_pc{n+1}_pmodule.pth'))
@@ -59,7 +59,7 @@ def get_model(name,pretrained=False,deep_graph=False,timesteps=4,hyperparams=Non
 
 
         if pretrained == True:
-            resume_ckpts= [f"/home/bhavin/Projects/predify/pefficient_net/pefficientnet_b0_lr0.0001/pnet_pretrained_pc{x+1}_009.pth" for x in range(8)]  
+            resume_ckpts= [f"./" for x in range(8)]  
             for x in range(8):
                 checkpoint = torch.load(resume_ckpts[x])
                 getattr(pnet,f"pcoder{x+1}").pmodule.load_state_dict({k[len('pmodule.'):]:v for k,v in checkpoint['pcoderweights'].items()})
