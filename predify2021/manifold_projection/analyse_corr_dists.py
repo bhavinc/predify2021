@@ -1,3 +1,5 @@
+# Just plotting the correlation data better
+
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
@@ -6,11 +8,11 @@ import torch
 plt.style.use('default')
 plt.figure(figsize=(12,8))
 
-main_fname = f"./peff_corrdists1000/common_params_manifoldproj_peffb0_ffm{0.8}_fbm{0.1}"  
+main_fname = f"/path/to/pickled/dicts"  
 with open(main_fname,'rb') as f:
     corrects_noise_dict = pickle.load(f)
 
-fp ={'fontsize':14}
+fp = {'fontsize':14}
 for i,(noise,data) in enumerate(corrects_noise_dict.items()):
 
     plt.subplot(2,3,i+1)
