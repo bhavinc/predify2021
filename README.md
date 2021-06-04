@@ -13,7 +13,7 @@ Dependencies :
 
 
 `Repository structure`
-`model_factory` package gives predified versions of the models using `get_model` function. It is used in ther experiments. 
+`model_factory` package gives predified versions of the models using `get_model` function. 
 
 
 `adversarial_attacks` contains all scripts for performing and analysing adversarial attacks.
