@@ -7,7 +7,7 @@ from   datetime import datetime
 import pickle
 
 fname = ''
-
+tag = 'some_tag'
 total_images  = 50000.
 
 
@@ -56,7 +56,6 @@ for noise,avg_err in accuracy_dict.items():
 
 #%%
 ###get the datapoints and confidence intervals
-
 confidence_intervals = []
 ydata = []
 for _time in accuracy_dict.keys():
@@ -84,47 +83,6 @@ plt.ylabel('mCE scores',**fp)
 plt.tight_layout()
 plt.savefig(f'mce.pdf',bbox_inches='tight')
 
-#%%
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#%%
-
-
-
-
-
-
-
-
-
-
-import os
-import pickle
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy
-from scipy import stats
-from scipy.interpolate import make_interp_spline,BSpline
-
-np.random.seed(17)
 
 
 def get_bootstrap_estimates(data,number_of_samples_to_draw,num_bootstraps=1000,operation='mean'):
@@ -170,10 +128,6 @@ all_distortions = [
 def plot2(fname):
     accuracy_dict = pickle.load(open(fname,'rb'))
 
-    # accuracy_dict[timesteps] = {distortions : [5  accuracies ] }
-
-
-
     fp = {'fontsize':16}
 
     plt.figure(figsize=(12,16))
@@ -195,7 +149,7 @@ def plot2(fname):
 
                 assert np.sum(population_sample) == corrects
 
-
+                # bootstrap the binary populations
                 if x ==0:
                     new_population_data = population_sample
                 else:
@@ -219,4 +173,4 @@ def plot2(fname):
     plt.tight_layout()
     plt.savefig(f'{tag}_cescores.png')
 
-plot2(fname)
+# plot2(fname)
