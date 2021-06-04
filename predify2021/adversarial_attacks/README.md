@@ -1,1 +1,1 @@
-This folder contains to perform and analyse adversarial attacks on the predictive versions of the models. The scripts take models from the model_factory and pickle dicts that also contain the raw and adversarial images along with the success.  
+This folder contains scripts to perform and analyse adversarial attacks on the predictive versions of the models. The scripts take models from the model_factory and pickle dicts that also contain the raw and adversarial images along with the success.  
