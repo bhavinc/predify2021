@@ -71,26 +71,3 @@ def get_model(name,pretrained=False,deep_graph=False,timesteps=4,hyperparams=Non
 
     else:
         raise ValueError('The model name is not supported yet.')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    pass
