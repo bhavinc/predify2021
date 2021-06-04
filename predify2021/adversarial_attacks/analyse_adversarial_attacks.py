@@ -1,6 +1,8 @@
 
-
-#%%
+############################################
+# Analyse adversarial attacks
+# Note that we will need GPU for this since the dicts were pickled with cuda tensors
+############################################
 
 import os
 import pickle
@@ -29,14 +31,14 @@ TIMESTEPS = [0,2,4,6,8]
 
 
 
-NET = 'peffb0'
+NET = 'pvgg'
 
 
 
-fp = {'fontsize':14}
+fp = {'fontsize':14} #fontparams
+
 plt.style.use('default')
 plt.figure(figsize=(7,7))
-
 
 ATTACKS = ['LinfBIM20steps']
 
@@ -53,7 +55,7 @@ for ATTACK in ATTACKS:
             assert NET in data_dict['model']
 
             print (data_dict['attack'])
-            print (t,' : ',ATTACK,' : ',data_dict['epsilons'])
+            print (t,' : ',ATTACK,' : ',data_dict['epsilons']) 
             print ()
             print ()
             perturbation_dict[t] = (data_dict['epsilons'],convert_to_successes(data_dict['successes']))
@@ -94,7 +96,8 @@ for chosen_epsilon in chosen_epsilons:
         xs.append(time)
         factor = 0.001
         ys.append(successes.cpu().numpy()[used_epsilons.index(chosen_epsilon)]*factor)
-    plt.plot(xs,ys/ys[0],marker='.',label=chosen_epsilon)
+    # baseline correct
+    plt.plot(xs, ys- ys[0]+1., marker='.',label=chosen_epsilon)
 plt.axhline(1.0,color='orange',linestyle='dashed')
 plt.xlabel('Timesteps',**fp)
 plt.ylabel('Success rate of the attack',**fp)
