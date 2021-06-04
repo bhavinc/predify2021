@@ -1,15 +1,23 @@
+########################################
+# Measure the correlation distances
+
+# A brief explanation : 
+# We pass clean images through the network and get the representations : say clean_e_n(t)
+# Similarly we pass noisy images through the network and get the representations : say noisy_e_n(t)
+# Now, given that the network does not the clean image (or neither has learnt it since it is from validation dataset), if noisy_e_n gets closer to clean_e_n, that that would be an emergent property of the dynamics.
+# Hence, here we measure the correlation distance between clean_e_n and noisy_e_n for all timesteps t (0 =< t =< T) 
+########################################
+
+
 
 #%%
-import sys
 
-gpu_to_use = '2'
-
-
+gpu_to_use       = '0'
 number_of_images = 1000
-batchsize=1
-MAX_TIME_STEP = 15
-NOISES = [0.25,0.5,0.75,1.,2.]
-
+batchsize        = 1
+MAX_TIME_STEP    = 15
+NOISES           = [0.25,0.5,0.75,1.,2.]
+imagenet_root    = '/path/to/imagenet/dataset'
 
 
 
@@ -73,8 +81,8 @@ transform_val = transforms.Compose([
 ])
 
 
-data_root  = ''
-val_ds     = ImageNet(data_root, split='val', download=False, transform=transform_val)
+
+val_ds     = ImageNet(imagenet_root, split='val', download=False, transform=transform_val)
 indices    = np.random.permutation(len(val_ds)).tolist()
 val_ds     = torch.utils.data.Subset(val_ds, indices[:number_of_images])
 val_loader = torch.utils.data.DataLoader(val_ds,  batch_size=batchsize, shuffle=True, drop_last=False,num_workers=16,pin_memory=True)
@@ -99,11 +107,10 @@ def get_corr_list(net,hp_t0,MAX_TIME_STEP):
 
 
         for i,(inputs,labels) in enumerate(val_loader,0):
-
+                
+            # get reps for clean images
             reps[NOISE] = []
             reps[0] = []
-
-
             for t in range(MAX_TIME_STEP):
                 if t==0:
                     with torch.no_grad():
@@ -113,17 +120,12 @@ def get_corr_list(net,hp_t0,MAX_TIME_STEP):
                         outputs = net(None)            
 
                 list_of_reps = [getattr(net,f"pcoder{i+1}").rep.detach().clone().cpu() for i in range(net.number_of_pcoders)]
-
-
                 reps[0].append(list_of_reps)
 
-
-
-
+                
+            # get reps for noisy images
             net.reset()
             inputs = inputs.to(device) + torch.normal(0, NOISE, size=inputs.shape,generator=torch.manual_seed(0)).to(device)
-
-
             for t in range(MAX_TIME_STEP):
                 if t==0:
                     with torch.no_grad():
@@ -136,7 +138,7 @@ def get_corr_list(net,hp_t0,MAX_TIME_STEP):
                 reps[NOISE].append(list_of_reps)
 
 
-
+            # calculate the correlation distances
             corr = np.zeros((MAX_TIME_STEP,net.number_of_pcoders))
             for t in range(MAX_TIME_STEP):
                 for pcoder in range(net.number_of_pcoders):
@@ -158,14 +160,12 @@ print ("Time taken :",tend-tstart)
 
 plt.style.use('default')
 plt.figure(figsize=(12,8))
-plt.suptitle(f"Peffb0 params : ffm: {ffm} fbm : {fbm}",fontsize=16)
-
-
+plt.suptitle(f"PVGG",fontsize=16)
 for i,(noise,data) in enumerate(corrects_noise_dict.items()):
 
     plt.subplot(2,3,i+1)
     plt.title(f'Noise $\sigma$={noise}')
-    for block_number in range(8):
+    for block_number in range(5):
         ydata = data[:,block_number,1:].mean(1)
         ydata = ydata/ydata[0]
 
@@ -173,7 +173,7 @@ for i,(noise,data) in enumerate(corrects_noise_dict.items()):
         plt.xlabel('Timesteps',fontsize=14)
         plt.ylabel('Normalized Correlation Distance',fontsize=14)
     plt.legend(bbox_to_anchor=(1,1))
-    plt.xticks(np.arange(1,15),fontsize=14)
+    plt.xticks([1,15],[1,15],fontsize=14)
     plt.yticks(fontsize=14)
 plt.tight_layout()
 plt.savefig('corr_dists_pvgg.pdf',bbox_inches='tight')
