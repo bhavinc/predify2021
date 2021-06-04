@@ -1,3 +1,10 @@
+######################################
+# Get the imagelist that can be used for performing the attacks.
+# The criteria is that the images should be classified correctly across all timesteps (refer paper for more details).
+######################################
+
+
+
 #%%
 ######################################
 ##      Arguments
@@ -7,7 +14,7 @@ gpu_to_use = 0
 rseed = 420
 save_name = f'./{model_name}_0.8ff_0.1fb_0.01erm_1000images_rseed{rseed}'
 batchsize  = 1
-
+imagenet_root = '/path/to/imagenet/dataset/'
 
 #####################################
 ##      Imports
@@ -78,7 +85,6 @@ model.to(device)
 
 # This is the list of images that will be used for attacks.
 # The constraint here is that it should be classified correctly across all timesteps of the cnn
-
 def get_imagelist(cnn, dataset, timesteps, number_of_images=500,verbose=True):
 
     cnn.reset()
@@ -100,8 +106,7 @@ def get_imagelist(cnn, dataset, timesteps, number_of_images=500,verbose=True):
 
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
-        data_root  = '/home/milad/pcproject/imagenet'
-        val_ds     = ImageNet(data_root, split='val', download=False, transform=transform_val)
+        val_ds     = ImageNet(imagenet_root, split='val', download=False, transform=transform_val)
         dataloader = torch.utils.data.DataLoader(val_ds,  batch_size=1, shuffle=True, drop_last=False,pin_memory=True)
 
     if verbose:
@@ -109,7 +114,7 @@ def get_imagelist(cnn, dataset, timesteps, number_of_images=500,verbose=True):
 
 
     if dataset=='cifar':
-        raise NotImplementedError # we chose to use foolbox 2.4 for AA's paper
+        raise NotImplementedError # we chose to use foolbox 2.4 for the other paper
 
 
 
