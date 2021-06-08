@@ -1,18 +1,21 @@
 # predify2021
 
-Code for reproducing the results presented in the paper 'Predify:Augmenting deep neural networks with brain-inspired predictive coding dynamics' ( https://arxiv.org/pdf/2106.02749.pdf )
+Code for reproducing the results presented in the paper 'Predify:Augmenting deep neural networks with brain-inspired predictive coding dynamics' (https://arxiv.org/pdf/2106.02749.pdf)
 
 
-```
-Dependencies :
-- predify :  https://github.com/miladmozafari/predify
+## Dependencies
+<pre>
+- predify  (<a href="https://github.com/miladmozafari/predify">Repository</a>)
 - torch 
 - tensorboard
 - loguru
 
-- timm : https://github.com/rwightman/pytorch-image-models (for EfficientNetB0)
-- foolbox 3.x (for Adversarial Attacks)
-```
+For EfficientNetB0:
+- timm     (<a href="https://github.com/rwightman/pytorch-image-models">Repository</a>)
+
+For Adversarial Attacks:
+- foolbox 3.x
+</pre>
 
 
 ## Repository structure
