@@ -1,6 +1,6 @@
 # predify2021
 
-Code for reproducing the results presented in the paper 'Predify:Augmenting deep neural networks with brain-inspired predictive coding dynamics' https://arxiv.org/pdf/2106.02749.pdf
+Code for reproducing the results presented in the paper 'Predify:Augmenting deep neural networks with brain-inspired predictive coding dynamics' ( https://arxiv.org/pdf/2106.02749.pdf )
 
 
 ```
