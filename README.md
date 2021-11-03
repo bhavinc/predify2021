@@ -24,3 +24,8 @@ For Adversarial Attacks:
 -  `mCE_scores` contains scripts for performing and calculating mCE scores on the predified networks.
 -  `manifold_projection` contains scripts for calculating the correlation distances between clean and noisy representations (refer paper for more details).
 
+## Weights of all the models
+
+[Peffbo weights](https://www.dropbox.com/s/0np1pzp3o3qhonv/weights_pefficientNetB0_imagenet.zip?dl=0) 
+
+[PVGG_Weights](https://www.dropbox.com/s/8lzp6wfo6n3bymk/weights_pvgg16_imagenet.zip?dl=0)
