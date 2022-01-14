@@ -115,7 +115,7 @@ def train_pcoders(net, epoch, writer,train_loader,verbose=True):
         images = images.cuda()
         optimizer.zero_grad()
         outputs = net(images)
-        for i in range(NUMBER_OF_PCODERS):
+        for i in range(net.number_of_pcoders):
             if i == 0:
                 a = loss_function(net.pcoder1.prd, images)
                 loss = a
@@ -124,7 +124,8 @@ def train_pcoders(net, epoch, writer,train_loader,verbose=True):
                 pcoder_curr = getattr(net, f"pcoder{i+1}")
                 a = loss_function(pcoder_curr.prd, pcoder_pre.rep)
                 loss += a
-            sumwriter.add_scalar(f"MSE Train/PCoder{i+1}", a.item(), epoch * len(train_loader) + batch_index)
+            if writer is not None:
+                writer.add_scalar(f"MSE Train/PCoder{i+1}", a.item(), epoch * len(train_loader) + batch_index)
 
         loss.backward()
         optimizer.step()
@@ -137,7 +138,8 @@ def train_pcoders(net, epoch, writer,train_loader,verbose=True):
             total_samples=len(train_loader.dataset)
         ))
         print ('Time taken:',time.time()-tstart)
-        sumwriter.add_scalar(f"MSE Train/Sum", loss.item(), epoch * len(train_loader) + batch_index)
+        if writer is not None:
+            writer.add_scalar(f"MSE Train/Sum", loss.item(), epoch * len(train_loader) + batch_index)
 
 
 def test_pcoders(net, epoch, writer,test_loader,verbose=True):
@@ -147,13 +149,13 @@ def test_pcoders(net, epoch, writer,test_loader,verbose=True):
     net.eval()
 
     tstart = time.time()
-    final_loss = [0 for i in range(NUMBER_OF_PCODERS)]
+    final_loss = [0 for i in range(net.number_of_pcoders)]
     for batch_index, (images, _) in enumerate(test_loader):
         net.reset()
         images = images.cuda()
         with torch.no_grad():
             outputs = net(images)
-        for i in range(NUMBER_OF_PCODERS):
+        for i in range(net.number_of_pcoders):
             if i == 0:
                 final_loss[i] += loss_function(net.pcoder1.prd, images).item()
             else:
@@ -162,11 +164,13 @@ def test_pcoders(net, epoch, writer,test_loader,verbose=True):
                 final_loss[i] += loss_function(pcoder_curr.prd, pcoder_pre.rep).item()
     
     loss_sum = 0
-    for i in range(NUMBER_OF_PCODERS):
+    for i in range(net.number_of_pcoders):
         final_loss[i] /= len(test_loader)
         loss_sum += final_loss[i]
-        sumwriter.add_scalar(f"MSE Test/PCoder{i+1}", final_loss[i], epoch * len(test_loader))
-    sumwriter.add_scalar(f"MSE Test/Sum", loss_sum, epoch * len(test_loader))
+        if writer is not None:
+            writer.add_scalar(f"MSE Test/PCoder{i+1}", final_loss[i], epoch * len(test_loader))
+    if writer is not None:
+        writer.add_scalar(f"MSE Test/Sum", loss_sum, epoch * len(test_loader))
 
     print('Training Epoch: {epoch} [{trained_samples}/{total_samples}]\tLoss: {:0.4f}\tLR: {:0.6f}'.format(
         loss_sum,
